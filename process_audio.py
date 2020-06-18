@@ -5,8 +5,6 @@ import glob
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
-''' since it's a pretty big neural-network library and our robot doesn't have a ton of memory, 
-    we'll only import what we need from Keras '''
 from keras.models import Sequential, Model
 from keras.utils import plot_model, to_categorical
 from keras.layers import Dense, Input, Activation, Conv2D, MaxPooling2D, concatenate, Flatten, Dropout, BatchNormalization
@@ -41,7 +39,7 @@ emotions[3] = 'angry'
 
 
 
-def write_tess_ravdess_csv(emotions=["sad", "neutral", "happy", 'angry'], train_name="TRAIN.csv",
+def write_databases_to_csv(emotions=["sad", "neutral", "happy", 'angry'], train_name="TRAIN.csv",
                            test_name="TEST.csv", verbose=1):
     train_target = {"path": [], "emotion": []}
     test_target = {"path": [], "emotion": []}
@@ -64,8 +62,7 @@ def write_tess_ravdess_csv(emotions=["sad", "neutral", "happy", 'angry'], train_
     pd.DataFrame(train_target).to_csv(train_name)
 
 
-# cite Hands on AI
-def preprocess_audio_mel_T(audio, sample_rate=22050, window_size=20,  # log_specgram
+def preprocess_audio_as_mel_spectrogram(audio, sample_rate=22050, window_size=20,  # log_specgram
                            step_size=10, eps=1e-10):
     mel_spec = librosa.feature.melspectrogram(y=audio, sr=22050, n_fft=2048, hop_length=512, n_mels=128)
     mel_db = (librosa.power_to_db(mel_spec, ref=np.max) + 40) / 40
@@ -83,7 +80,7 @@ def get_fitted_spectrogram(file_path, input_length=input_length):
     else:
         data = np.pad(data, (offset, input_length - len(data) - offset), "constant")
 
-    data = preprocess_audio_mel_T(data)
+    data = preprocess_audio_as_mel_spectrogram(data)
     return data
 
 
@@ -141,8 +138,9 @@ def create_sequential_convnet():
 def run_test():
     final_test_paths = []
     final_test_label = []
-
-    #write_tess_ravdess_csv()
+    
+    #databases used were the freely available TESS and RAVDESS
+    write_databases_to_csv()
     with open('TRAIN.csv', newline='') as f:
         reader = csv.reader(f)
         data = []
@@ -214,7 +212,7 @@ def run_test():
     for rec in final_test_paths:
         spec = get_fitted_spectrogram(rec)
         x_final_test.append(spec)
-
+    #reshape our inputs as needed (see Keras documentation)
     x_train = np.asarray(x_train)
     x_train = x_train.reshape(np.append(x_train.shape, 1))
 
@@ -223,11 +221,11 @@ def run_test():
 
     x_final_test = np.asarray(x_final_test)
     x_final_test = x_final_test.reshape(np.append(x_final_test.shape, 1))
-
+    #use one-hot encoding
     y_list = to_categorical(labels, 4)
     y_test_binary = to_categorical(labels_test, 4)
 
-
+    #this was the best performing architecture but other architectures can be substituted in the following line
     model = create_augmented_parallel_convnet()
     model.compile(loss=categorical_crossentropy, optimizer=Adam(), metrics=['mae', "accuracy"])
 
@@ -236,7 +234,8 @@ def run_test():
     json_file = open("./weights/v3_model.json", "w+")
     json_file.write(model_json)
     json_file.close()
-    filepath= "weights/V3_WEIGHTS_TRIAL_MAY3-improvement-{epoch:02d}-{val_accuracy:.2f}.hdf5"
+    trial_num = input('Enter Trial Number: ')
+    filepath= f"weights/V3_WEIGHTS_TRIAL_{trial_num}-improvement-{epoch:02d}-{val_accuracy:.2f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
     callbacks_list = [checkpoint]
 
@@ -252,13 +251,13 @@ def run_test():
 
     q = model.predict(x_final_test)
 
-    predictions = open('3_Predictions.txt', 'w+')
+    predictions = open(f'{trial_num}_Predictions.txt', 'w+')
     print(q, file=predictions)
     predictions.close()
-    foo = open('3_Final_test_label.txt', 'w+')
+    foo = open(f'{trial_num}_Final_test_label.txt', 'w+')
     print(final_test_label, file=foo)
     foo.close()
-    f00 = open('3_Final_Test_Paths.txt', 'w+')
+    f00 = open('{trial_num}_Final_Test_Paths.txt', 'w+')
     print(final_test_paths, file=f00)
     f00.close()
 
