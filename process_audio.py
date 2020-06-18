@@ -235,7 +235,7 @@ def run_test():
     json_file.write(model_json)
     json_file.close()
     trial_num = input('Enter Trial Number: ')
-    filepath= f"weights/V3_WEIGHTS_TRIAL_{trial_num}-improvement-{epoch:02d}-{val_accuracy:.2f}.hdf5"
+    filepath= f"weights/WEIGHTS_TRIAL_{trial_num}-improvement-{epoch:02d}-{val_accuracy:.2f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
     callbacks_list = [checkpoint]
 
@@ -254,12 +254,12 @@ def run_test():
     predictions = open(f'{trial_num}_Predictions.txt', 'w+')
     print(q, file=predictions)
     predictions.close()
-    foo = open(f'{trial_num}_Final_test_label.txt', 'w+')
-    print(final_test_label, file=foo)
-    foo.close()
-    f00 = open('{trial_num}_Final_Test_Paths.txt', 'w+')
-    print(final_test_paths, file=f00)
-    f00.close()
+    label_filr = open(f'{trial_num}_Final_test_label.txt', 'w+')
+    print(final_test_label, file=label_file)
+    label_file.close()
+    paths_file = open('{trial_num}_Final_Test_Paths.txt', 'w+')
+    print(final_test_paths, file=paths_file)
+    paths_file.close()
 
     pyplot.plot(history.history['loss'], label='train')
     pyplot.plot(history.history['val_loss'], label='test')
