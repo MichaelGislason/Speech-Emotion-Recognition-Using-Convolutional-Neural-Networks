@@ -4,15 +4,15 @@ import re
     For possible future students looking to make their own model,
     you can input a trial number and avoid overwriting past results.
     Text files are of form "{Trial Num}_bla_bla.txt'''
-# we'll plug in the argmax of the model's output into this dict to get our final guess'emotions = {}
+# we'll plug in the argmax of the model's output into this dict to get our final guesses' emotions = {}
 emotions = {}
 emotions[0] = 'sad'
 emotions[1] = 'happy'
 emotions[2] = 'neutral'
 emotions[3] = 'angry'
 
-
-predictions_file = open(f'3_Predictions.txt', 'r')
+trial_num = input('Enter trial number: ')
+predictions_file = open(f'{trial_num}_Predictions.txt', 'r')
 predicts = predictions_file.readlines()
 predictions_file.close()
 guesses = []
@@ -29,7 +29,7 @@ for line in predicts:
             index, max_val = i, l[i]
     guesses.append(emotions[index])
 
-label_file = open(f'3_final_test_label.txt', 'r')
+label_file = open(f'{trial_num}_final_test_label.txt', 'r')
 #final test labels are one string
 big_string = label_file.readline()
 l = re.split(r'\"|\'|,| |\n', big_string)
@@ -42,7 +42,7 @@ label_file.close()
 print(final_test_labels)
 print(guesses)
 
-text_for_excel = open(f'3_for_excel.txt', 'w+')
+text_for_excel = open(f'{trial_num}_for_excel.txt', 'w+')
 for i in range(len(guesses)):
     print(f'{final_test_labels[i]}\t{guesses[i]}', file=text_for_excel)
 text_for_excel.close()
@@ -52,7 +52,7 @@ em['sad'] = []
 em['happy'] = []
 em['neutral'] = []
 em['angry'] = []
-foo = open('3_for_excel.txt', 'r')
+foo = open(f'{trial_num}_for_excel.txt', 'r')
 i = 0
 for line in foo:
     zed = line.split()
